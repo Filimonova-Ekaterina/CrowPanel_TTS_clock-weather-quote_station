@@ -1,0 +1,19 @@
+name: espressif__esp32_display_panel
+version: "1.0.3"
+description: >
+  ESP32_Display_Panel is a display driver and GUI porting library designed
+  by Espressif specifically for ESP series SoCs (ESP32, ESP32-S3, ESP32-P4, etc.)
+idf: ">=5.1"
+dependencies:
+  espressif/esp-lib-utils:
+    public: true
+    version: 0.2.*
+  espressif/esp32_io_expander:
+    public: true
+    version: 1.*
+repository: https://github.com/esp-arduino-libs/ESP32_Display_Panel.git
+repository_info:
+  commit_sha: 2d1ed2f6beefe02f780ddf35cd1feb00ffca2e50
+issues: https://github.com/esp-arduino-libs/ESP32_Display_Panel/issues
+url: https://github.com/esp-arduino-libs/ESP32_Display_Panel
+
