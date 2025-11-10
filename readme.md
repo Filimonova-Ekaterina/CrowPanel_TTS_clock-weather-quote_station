@@ -1,6 +1,6 @@
 # ESP32-S3 based assistant with voice synthesis, clock, weather forecasting and Desktop App for Wi-Fi settings input
 
-**Summary:** This repository combines firmware for ELECROW CrowPanel Advance 7.0 (ESP32-S3, 800×480 display) with an LVGL-based multi-screen UI and a desktop Python application for WiFi configuration. The system provides voice synthesis for time, date, and weather information through the GRC HxTTS module, with automatic time synchronization, timezone detection and weather forecasting capabilities.
+**Summary:** This repository combines firmware for ELECROW CrowPanel Advance 7.0 (ESP32-S3, 800×480 display, with 8MB flash memory) with an LVGL-based multi-screen UI and a desktop Python application for WiFi configuration. The system provides voice synthesis for time, date, and weather information through the GRC HxTTS module, with automatic time synchronization, timezone detection and weather forecasting capabilities.
 
 ---
 
@@ -76,6 +76,7 @@
    - **Success**: "WiFi settings sent to device" - credentials are delivered to the panel
    - **Error**: Specific failure reason (COM port access denied, device not responding, etc.)
 6. The device's display will show the received WiFi credentials on the WiFi setup screen, and a connection attempt will begin when you press the "connect" button.
+> **Note:** During the initial Wi-Fi setup, the device may reboot to initialize the network interfaces via a COM port connection. In this case, simply re-send the Wi-Fi credentials.
 
 ### Example usage
 
