@@ -94,13 +94,13 @@ Below is an example screenshot showing the application with filled fields, COM p
 
 - The UI is implemented in `components/ui` as a custom 4-screen design.  
 - Screen 1 - Clock station: Analog and digital clock display with date, format toggle, and voice buttons.
-![](images/ui_screen1.png)  
+  ![](images/ui_screen1.png)  
 - Screen 2 - Wi-Fi Setup: Credential display, connection status, and manual connect trigger.
-![](images/ui_screen2.png)
+  ![](images/ui_screen2.png)
 - Screen 3 - Weather Station: Current conditions, today's forecast and 3-day forecast with voice synthesis buttons.
-![](images/ui_screen3.png)
+  ![](images/ui_screen3.png)
 - Screen 4 - Quotes Screen: Inspirational quotes display with author attribution, update button and voice synthesis button.
-![](images/ui_screen4.png)
+  ![](images/ui_screen4.png)
 - Navigation between screens via swipe gestures or corner navigation buttons
 
 ### Key UI features:
