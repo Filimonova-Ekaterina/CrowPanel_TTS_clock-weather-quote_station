@@ -27,6 +27,8 @@ lv_obj_t * ui_RightNavBtn_S1 = NULL;
 static lv_obj_t * ui_NavDots_S1 = NULL;
 static lv_obj_t * ui_NavDot1_S1 = NULL;
 static lv_obj_t * ui_NavDot2_S1 = NULL;
+static lv_obj_t * ui_NavDot3_S1 = NULL;
+static lv_obj_t * ui_NavDot4_S1 = NULL;
 static lv_point_t hour_points[2];
 static lv_point_t minute_points[2];
 static lv_point_t second_points[2];
@@ -49,19 +51,21 @@ void ui_event_Screen1(lv_event_t * e)
         }
         else if(gesture_dir == LV_DIR_RIGHT) {
             lv_indev_wait_release(indev);
-            _ui_screen_change(&ui_Screen3, LV_SCR_LOAD_ANIM_FADE_ON, 50, 0, &ui_Screen3_screen_init);
+            _ui_screen_change(&ui_Screen4, LV_SCR_LOAD_ANIM_FADE_ON, 50, 0, &ui_Screen4_screen_init);
         }
     }
 }
+
 void ui_event_LeftNavBtn_S1(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
     
     if(event_code == LV_EVENT_CLICKED) {
-        ESP_LOGI(TAG_CLOCK, "Left navigation button pressed - going to Screen3");
-        _ui_screen_change(&ui_Screen3, LV_SCR_LOAD_ANIM_FADE_ON, 50, 0, &ui_Screen3_screen_init);
+        ESP_LOGI(TAG_CLOCK, "Left navigation button pressed - going to Screen4");
+        _ui_screen_change(&ui_Screen4, LV_SCR_LOAD_ANIM_FADE_ON, 50, 0, &ui_Screen4_screen_init);
     }
 }
+
 void ui_event_RightNavBtn_S1(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
@@ -220,7 +224,7 @@ static void create_analog_clock(lv_obj_t * parent)
 static void create_navigation_dots(lv_obj_t * parent)
 {
     ui_NavDots_S1 = lv_obj_create(parent);
-    lv_obj_set_size(ui_NavDots_S1, 80, 20); 
+    lv_obj_set_size(ui_NavDots_S1, 100, 20);
     lv_obj_align(ui_NavDots_S1, LV_ALIGN_BOTTOM_MID, 0, -10);
     lv_obj_set_style_bg_opa(ui_NavDots_S1, LV_OPA_TRANSP, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(ui_NavDots_S1, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -243,13 +247,19 @@ static void create_navigation_dots(lv_obj_t * parent)
     lv_obj_set_style_radius(ui_NavDot2_S1, LV_RADIUS_CIRCLE, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(ui_NavDot2_S1, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    static lv_obj_t * ui_NavDot3_S1 = NULL;
     ui_NavDot3_S1 = lv_obj_create(ui_NavDots_S1);
     lv_obj_set_size(ui_NavDot3_S1, 8, 8);
     lv_obj_set_style_bg_color(ui_NavDot3_S1, lv_color_hex(0x666666), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_NavDot3_S1, LV_OPA_COVER, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_radius(ui_NavDot3_S1, LV_RADIUS_CIRCLE, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(ui_NavDot3_S1, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_NavDot4_S1 = lv_obj_create(ui_NavDots_S1);
+    lv_obj_set_size(ui_NavDot4_S1, 8, 8);
+    lv_obj_set_style_bg_color(ui_NavDot4_S1, lv_color_hex(0x666666), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_NavDot4_S1, LV_OPA_COVER, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui_NavDot4_S1, LV_RADIUS_CIRCLE, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(ui_NavDot4_S1, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 }
 
 void update_analog_clock(int hours, int minutes, int seconds)

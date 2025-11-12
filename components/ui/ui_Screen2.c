@@ -16,6 +16,8 @@ lv_obj_t * ui_RightNavBtn_S2 = NULL;
 static lv_obj_t * ui_NavDots_S2 = NULL;
 static lv_obj_t * ui_NavDot1_S2 = NULL;
 static lv_obj_t * ui_NavDot2_S2 = NULL;
+static lv_obj_t * ui_NavDot3_S2 = NULL;
+static lv_obj_t * ui_NavDot4_S2 = NULL;
 
 static const char *TAG_SCREEN2 = "SCREEN2";
 
@@ -29,6 +31,7 @@ void ui_event_LeftNavBtn_S2(lv_event_t * e)
         _ui_screen_change(&ui_Screen1, LV_SCR_LOAD_ANIM_FADE_ON, 50, 0, &ui_Screen1_screen_init);
     }
 }
+
 void ui_event_RightNavBtn_S2(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
@@ -142,7 +145,7 @@ static void create_navigation_buttons(lv_obj_t * parent)
 static void create_navigation_dots(lv_obj_t * parent)
 {
     ui_NavDots_S2 = lv_obj_create(parent);
-    lv_obj_set_size(ui_NavDots_S2, 80, 20);
+    lv_obj_set_size(ui_NavDots_S2, 100, 20);
     lv_obj_align(ui_NavDots_S2, LV_ALIGN_BOTTOM_MID, 0, -10);
     lv_obj_set_style_bg_opa(ui_NavDots_S2, LV_OPA_TRANSP, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(ui_NavDots_S2, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -165,13 +168,19 @@ static void create_navigation_dots(lv_obj_t * parent)
     lv_obj_set_style_radius(ui_NavDot2_S2, LV_RADIUS_CIRCLE, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(ui_NavDot2_S2, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    static lv_obj_t * ui_NavDot3_S2 = NULL;
     ui_NavDot3_S2 = lv_obj_create(ui_NavDots_S2);
     lv_obj_set_size(ui_NavDot3_S2, 8, 8);
     lv_obj_set_style_bg_color(ui_NavDot3_S2, lv_color_hex(0x666666), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_NavDot3_S2, LV_OPA_COVER, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_radius(ui_NavDot3_S2, LV_RADIUS_CIRCLE, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(ui_NavDot3_S2, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_NavDot4_S2 = lv_obj_create(ui_NavDots_S2);
+    lv_obj_set_size(ui_NavDot4_S2, 8, 8);
+    lv_obj_set_style_bg_color(ui_NavDot4_S2, lv_color_hex(0x666666), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_NavDot4_S2, LV_OPA_COVER, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui_NavDot4_S2, LV_RADIUS_CIRCLE, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(ui_NavDot4_S2, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 }
 
 void ui_Screen2_screen_init(void)
@@ -196,7 +205,7 @@ void ui_Screen2_screen_init(void)
     lv_obj_set_style_pad_ver(top_panel, 8, 0);
 
     lv_obj_t * title_label = lv_label_create(top_panel);
-    lv_label_set_text(title_label, "Wi-Fi Settings");
+    lv_label_set_text(title_label, "Wi-Fi settings");
     lv_obj_set_style_text_color(title_label, lv_color_hex(0xE0E0E0), 0);
     lv_obj_set_style_text_font(title_label, &lv_font_montserrat_20, 0);
 

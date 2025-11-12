@@ -24,6 +24,7 @@
 #include "timezone_service.h"
 #include "weather_service.h"
 #include "location_service.h"
+#include "quote_service.h"
 
 #define MAX_RETRY 3
 #define WIFI_RETRY_DELAY_MS 2000
@@ -39,6 +40,9 @@ TimeFormatter time_formatter;
 char current_time_str[64] = "00:00:00";
 char current_date_str[64] = "2025-01-01";
 char status_str[128] = "Starting...";
+static char current_quote[1024] = {0};
+static char current_author[128] = {0};
+static bool quote_available = false;
 
 static EventGroupHandle_t wifi_event_group;
 const int WIFI_CONNECTED_BIT = BIT0;
@@ -78,6 +82,9 @@ static SemaphoreHandle_t weather_mutex = NULL;
 weather_forecast_t current_forecast = {0};
 bool forecast_available = false;
 static bool wifi_connection_active = false;
+static SemaphoreHandle_t quote_mutex = NULL;
+static bool quote_update_requested = false;
+static bool initial_quote_loaded = false;
 
 static void set_status(const char* status);
 static void reconnect_wifi_delayed(void *arg);
@@ -115,6 +122,10 @@ extern "C" {
                                       const char* desc_12, const char* desc_17, const char* desc_22);
     void update_3day_forecast_display(float temp_day1, float temp_day2, float temp_day3,
                                      const char* desc_day1, const char* desc_day2, const char* desc_day3);
+    void update_quote_text(const char* quote_text);
+    void update_quote_status(const char* status, bool is_error);
+    void unlock_quote_buttons(void);
+    bool get_random_quote_simple(char* quote_buffer, size_t buffer_size);
 }
 
 
@@ -1042,6 +1053,170 @@ static void weather_update_task(void* arg) {
 }
 
 
+extern "C" void update_quote_data(void) {
+    ESP_LOGI("QUOTE", "=== UPDATE QUOTE DATA CALLED ===");
+    
+    update_quote_status("Fetching quote...", false);
+    
+    char quote_text[1024] = {0};
+    
+    if (get_random_quote_simple(quote_text, sizeof(quote_text))) {
+        ESP_LOGI("QUOTE", "Successfully got quote: %s", quote_text);
+        
+        if (quote_mutex) xSemaphoreTake(quote_mutex, portMAX_DELAY);
+        strlcpy(current_quote, quote_text, sizeof(current_quote));
+        
+        char* author_start = strrchr(quote_text, '-');
+        if (author_start) {
+            strlcpy(current_author, author_start + 2, sizeof(current_author));
+        } else {
+            strlcpy(current_author, "Unknown", sizeof(current_author));
+        }
+        
+        quote_available = true;
+        initial_quote_loaded = true;
+        if (quote_mutex) xSemaphoreGive(quote_mutex);
+        update_quote_text(quote_text);
+        update_quote_status("Done! Update for new quote", false);
+        
+    } else {
+        ESP_LOGW("QUOTE", "Failed to get quote from API");
+        update_quote_status("Update failed", true);
+    }
+    unlock_quote_buttons();
+}
+
+extern "C" void speak_current_quote(void) {
+    ESP_LOGI("QUOTE_TTS", "speak_current_quote called - using displayed quote");
+    
+    if (!g_hx_tts) {
+        ESP_LOGE("QUOTE_TTS", "TTS not initialized");
+        return;
+    }
+    char quote_copy[1024] = {0};
+    bool quote_is_available = false;
+    if (quote_mutex) {
+        xSemaphoreTake(quote_mutex, portMAX_DELAY);
+    }
+    
+    if (quote_available && strlen(current_quote) > 0) {
+        strlcpy(quote_copy, current_quote, sizeof(quote_copy));
+        quote_is_available = true;
+        ESP_LOGI("QUOTE_TTS", "Using displayed quote: %.100s", current_quote);
+    } else {
+        ESP_LOGW("QUOTE_TTS", "No displayed quote available - this is an error state");
+    }
+    
+    if (quote_mutex) {
+        xSemaphoreGive(quote_mutex);
+    }
+    
+    if (quote_is_available) {
+        char tts_phrase[1200] = {0};
+        
+        char* separator = strstr(quote_copy, " - ");
+        if (separator) {
+            *separator = '\0';
+            char* quote_part = quote_copy;
+            char* author_part = separator + 3;
+            
+            if (quote_part[0] == '"' && quote_part[strlen(quote_part)-1] == '"') {
+                quote_part++;
+                quote_part[strlen(quote_part)-1] = '\0';
+            }
+            int quote_len = strlen(quote_part);
+            while (quote_len > 0 && 
+                  (quote_part[quote_len - 1] == '.' || 
+                   quote_part[quote_len - 1] == '!' || 
+                   quote_part[quote_len - 1] == '?')) {
+                quote_part[quote_len - 1] = '\0';
+                quote_len--;
+            }
+            snprintf(tts_phrase, sizeof(tts_phrase), "%s. By %s.", quote_part, author_part);
+        } else {
+            int quote_len = strlen(quote_copy);
+            while (quote_len > 0 && 
+                  (quote_copy[quote_len - 1] == '.' || 
+                   quote_copy[quote_len - 1] == '!' || 
+                   quote_copy[quote_len - 1] == '?')) {
+                quote_copy[quote_len - 1] = '\0';
+                quote_len--;
+            }
+            snprintf(tts_phrase, sizeof(tts_phrase), "%s.", quote_copy);
+        }
+        
+        ESP_LOGI("QUOTE_TTS", "TTS phrase: %s", tts_phrase);
+        start_tts_playback_c(tts_phrase);
+        
+    } else {
+        ESP_LOGE("QUOTE_TTS", "No quote available to speak - this should not happen");
+        start_tts_playback_c("No quote is currently available.");
+    }
+}
+
+extern "C" void request_quote_update(void) {
+    if (quote_mutex) xSemaphoreTake(quote_mutex, portMAX_DELAY);
+    quote_update_requested = true;
+    if (quote_mutex) xSemaphoreGive(quote_mutex);
+    
+    ESP_LOGI(TAG, "Quote update requested from UI");
+}
+
+static void quote_update_task(void* arg) {
+    ESP_LOGI(TAG, "Quote update task started - waiting for WiFi");
+    
+    if (quote_mutex == NULL) {
+        quote_mutex = xSemaphoreCreateMutex();
+    }
+    
+    while (!wifi_connected) {
+        update_quote_status("Waiting for WiFi...", false);
+        vTaskDelay(5000 / portTICK_PERIOD_MS);
+    }
+    
+    ESP_LOGI(TAG, "WiFi connected - doing initial quote load");
+    update_quote_data();
+    
+    if (quote_mutex) xSemaphoreTake(quote_mutex, portMAX_DELAY);
+    bool is_available = quote_available;  
+    if (quote_mutex) xSemaphoreGive(quote_mutex);
+    
+    if (is_available) {
+        update_quote_status("Done! Update for new quote", false);
+        ESP_LOGI(TAG, "Initial quote loaded successfully");
+    } else {
+        update_quote_status("Quote load failed", true);
+        ESP_LOGW(TAG, "Initial quote load failed");
+    }
+    
+    while (true) {
+        bool should_update = false;
+        
+        if (quote_mutex) xSemaphoreTake(quote_mutex, portMAX_DELAY);
+        should_update = quote_update_requested;
+        quote_update_requested = false;
+        if (quote_mutex) xSemaphoreGive(quote_mutex);
+        
+        if (should_update) {
+            ESP_LOGI(TAG, "Processing quote update request");
+            update_quote_data();
+            
+            if (quote_mutex) xSemaphoreTake(quote_mutex, portMAX_DELAY);
+            bool update_success = quote_available;  
+            if (quote_mutex) xSemaphoreGive(quote_mutex);
+            
+            if (update_success) {
+                ESP_LOGI(TAG, "Quote update completed successfully");
+            } else {
+                ESP_LOGW(TAG, "Quote update failed");
+            }
+        }
+        
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
+    
+    vTaskDelete(NULL);
+}
 static void sequential_tasks(void* arg) {
     ESP_LOGI(TAG, "Starting sequential tasks...");
     
@@ -1060,13 +1235,28 @@ static void sequential_tasks(void* arg) {
     update_forecast_data(); 
     
     ESP_LOGI(TAG, "System initialized. Starting services...");
-    
-    BaseType_t res = xTaskCreate(weather_update_task, "weather_update", 8192, NULL, 2, NULL);
+
+    if (quote_mutex) xSemaphoreTake(quote_mutex, portMAX_DELAY);
+    memset(current_quote, 0, sizeof(current_quote));  
+    memset(current_author, 0, sizeof(current_author)); 
+    quote_available = false;  
+    initial_quote_loaded = false;
+    if (quote_mutex) xSemaphoreGive(quote_mutex);
+    BaseType_t res;
+    res = xTaskCreate(weather_update_task, "weather_update", 8192, NULL, 2, NULL);
     if (res != pdPASS) {
         ESP_LOGE(TAG, "Failed to create weather_update_task");
     } else {
         ESP_LOGI(TAG, "Weather update task started");
     }
+    
+    res = xTaskCreate(quote_update_task, "quote_update", 8192, NULL, 2, NULL);
+    if (res != pdPASS) {
+        ESP_LOGE(TAG, "Failed to create quote_update_task");
+    } else {
+        ESP_LOGI(TAG, "Quote update task started");
+    }
+    
     ESP_LOGI(TAG, "Step 3: Starting time update loop");
     for (;;) {
         update_time();
@@ -1091,6 +1281,12 @@ extern "C" void app_main() {
     if (weather_mutex == NULL) {
         ESP_LOGW(TAG, "Failed to create weather mutex - continuing without mutex (not recommended)");
     }
+
+    quote_mutex = xSemaphoreCreateMutex();
+    if (quote_mutex == NULL) {
+        ESP_LOGW(TAG, "Failed to create quote mutex");
+    }
+
     Board* board = new Board();
     if (!board->init() || !board->begin() ||
         !lvgl_port_init(board->getLCD(), board->getTouch())) {
@@ -1102,7 +1298,7 @@ extern "C" void app_main() {
     initialize_time();
     location_service_init();
     weather_service_init();
-    
+    quote_service_init();
     _ui_screen_change(&ui_Screen2, LV_SCR_LOAD_ANIM_FADE_ON, 50, 0, &ui_Screen2_screen_init);
     set_status("WiFi setup required");
     first_boot = false;
@@ -1114,7 +1310,7 @@ extern "C" void app_main() {
     else ESP_LOGE(TAG, "Failed to init TTS");
 
     uart_json_init(ui_set_wifi_credentials);
-    xTaskCreate(sequential_tasks, "sequential_tasks", 8192, NULL, 3, NULL);
+    xTaskCreate(sequential_tasks, "sequential_tasks", 16384, NULL, 3, NULL);
 
     ESP_LOGI(TAG, "=== Advanced Clock TTS started ===");
 }

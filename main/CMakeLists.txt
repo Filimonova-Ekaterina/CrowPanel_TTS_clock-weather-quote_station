@@ -8,6 +8,7 @@ idf_component_register(
     "timezone_service.cpp"
     "weather_service.cpp"
     "location_service.cpp"
+    "quote_service.cpp"
     "hm_ctrl/crc.c"
     "hm_ctrl/crc_table.c"
     "hm_ctrl/hm_comm_protocol.c"

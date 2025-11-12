@@ -16,10 +16,11 @@ lv_obj_t * ui_WeatherStatusLabel = NULL;
 lv_obj_t * ui_SpeakWeatherBtn = NULL;
 lv_obj_t * ui_SpeakTodayBtn = NULL;
 lv_obj_t * ui_SpeakForecastBtn = NULL;
-lv_obj_t * ui_NavDots_S3 = NULL;
-lv_obj_t * ui_NavDot1_S3 = NULL;
-lv_obj_t * ui_NavDot2_S3 = NULL;
-lv_obj_t * ui_NavDot3_S3 = NULL;
+static lv_obj_t * ui_NavDots_S3 = NULL;
+static lv_obj_t * ui_NavDot1_S3 = NULL;
+static lv_obj_t * ui_NavDot2_S3 = NULL;
+static lv_obj_t * ui_NavDot3_S3 = NULL;
+static lv_obj_t * ui_NavDot4_S3 = NULL;
 lv_obj_t * ui_TimeSlot12 = NULL;
 lv_obj_t * ui_TimeSlot17 = NULL;
 lv_obj_t * ui_TimeSlot22 = NULL;
@@ -62,7 +63,7 @@ void ui_event_Screen3(lv_event_t * e)
         }
         else if(gesture_dir == LV_DIR_LEFT) {
             lv_indev_wait_release(indev);
-            _ui_screen_change(&ui_Screen1, LV_SCR_LOAD_ANIM_FADE_ON, 50, 0, &ui_Screen1_screen_init);
+            _ui_screen_change(&ui_Screen4, LV_SCR_LOAD_ANIM_FADE_ON, 50, 0, &ui_Screen4_screen_init);
         }
     }
 }
@@ -70,7 +71,7 @@ void ui_event_Screen3(lv_event_t * e)
 static void create_navigation_dots(lv_obj_t * parent)
 {
     ui_NavDots_S3 = lv_obj_create(parent);
-    lv_obj_set_size(ui_NavDots_S3, 80, 20);
+    lv_obj_set_size(ui_NavDots_S3, 100, 20);
     lv_obj_align(ui_NavDots_S3, LV_ALIGN_BOTTOM_MID, 0, -10);
     lv_obj_set_style_bg_opa(ui_NavDots_S3, LV_OPA_TRANSP, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(ui_NavDots_S3, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -99,6 +100,13 @@ static void create_navigation_dots(lv_obj_t * parent)
     lv_obj_set_style_bg_opa(ui_NavDot3_S3, LV_OPA_COVER, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_radius(ui_NavDot3_S3, LV_RADIUS_CIRCLE, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(ui_NavDot3_S3, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_NavDot4_S3 = lv_obj_create(ui_NavDots_S3);
+    lv_obj_set_size(ui_NavDot4_S3, 8, 8);
+    lv_obj_set_style_bg_color(ui_NavDot4_S3, lv_color_hex(0x666666), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_NavDot4_S3, LV_OPA_COVER, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui_NavDot4_S3, LV_RADIUS_CIRCLE, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(ui_NavDot4_S3, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 }
 
 static lv_obj_t* create_weather_button(lv_obj_t* parent, const char* text, lv_event_cb_t event_cb) {
@@ -138,8 +146,8 @@ void ui_event_RightNavBtn(lv_event_t * e)
     lv_event_code_t event_code = lv_event_get_code(e);
     
     if(event_code == LV_EVENT_CLICKED) {
-        ESP_LOGI(TAG_SCREEN3, "Right navigation button pressed - going to Screen1");
-        _ui_screen_change(&ui_Screen1, LV_SCR_LOAD_ANIM_FADE_ON, 50, 0, &ui_Screen1_screen_init);
+        ESP_LOGI(TAG_SCREEN3, "Right navigation button pressed - going to Screen4");
+        _ui_screen_change(&ui_Screen4, LV_SCR_LOAD_ANIM_FADE_ON, 50, 0, &ui_Screen4_screen_init);
     }
 }
 

@@ -25,12 +25,18 @@ void ui_event_SpeakWeatherBtn(lv_event_t * e);
 void ui_event_SpeakTodayBtn(lv_event_t * e);
 void ui_event_SpeakForecastBtn(lv_event_t * e);
 void ui_event_UpdateWeatherBtn(lv_event_t * e);
-
 void ui_update_weather_display(float temp, float feels_like, int humidity, int pressure, const char* description, const char* city);
 void update_weather_status(const char* status, bool is_error);
 void update_today_forecast_display(float temp_12, float temp_17, float temp_22, 
                                   const char* desc_12, const char* desc_17, const char* desc_22);
 void update_3day_forecast_display(float temp_day1, float temp_day2, float temp_day3,
                                  const char* desc_day1, const char* desc_day2, const char* desc_day3);
+
+void update_fact_status(const char* status, bool is_error);
+void update_fact_text(const char* fact_text);
+void lock_fact_buttons(void);
+void unlock_fact_buttons(void);
+void ui_event_UpdateFactBtn(lv_event_t * e);
+void ui_event_SpeakFactBtn(lv_event_t * e);                             
 
 #endif

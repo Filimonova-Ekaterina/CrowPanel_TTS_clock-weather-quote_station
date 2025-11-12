@@ -3,6 +3,7 @@ set(SRCS
     ui.c
     ui_Screen2.c
     ui_Screen3.c
+    ui_Screen4.c
     ui_helpers.c
     ui_events.c
     ui_font_Font1.c

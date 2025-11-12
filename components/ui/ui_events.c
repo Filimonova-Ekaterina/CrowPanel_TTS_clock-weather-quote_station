@@ -19,6 +19,9 @@ extern void speak_current_weather(void);
 extern void speak_today_forecast(void);
 extern void speak_days_forecast(int days);
 extern void request_weather_update(void);
+extern void request_quote_update(void);
+extern void speak_current_quote(void);
+extern void update_quote_data(void);
 extern bool time_initialized;
 extern lv_obj_t *ui_Time12Temp;
 extern lv_obj_t *ui_Time12Desc;
@@ -44,6 +47,90 @@ bool password_visible = false;
 extern bool wifi_connected;
 static bool speaking_time_date = false;
 static bool speaking_weather = false;
+static bool speaking_quote = false;
+
+
+void update_quote_status(const char* status, bool is_error) {
+    if (ui_QuoteStatusLabel && status) {
+        lv_label_set_text(ui_QuoteStatusLabel, status);
+        if (is_error) {
+            lv_obj_set_style_text_color(ui_QuoteStatusLabel, lv_color_hex(0xFF5252), 0);
+        } else {
+            lv_obj_set_style_text_color(ui_QuoteStatusLabel, lv_color_hex(0x888888), 0);
+        }
+        lv_task_handler(); 
+        ESP_LOGI("UI", "Quote status: %s", status);
+    }
+}
+
+void update_quote_text(const char* quote_text) {
+    if (ui_QuoteTextArea && quote_text) {
+        lv_textarea_set_text(ui_QuoteTextArea, quote_text);
+        lv_task_handler();
+        ESP_LOGI("UI", "Quote text updated");
+    }
+}
+
+void lock_quote_buttons(void) {
+    if (ui_UpdateQuoteBtn) {
+        lv_obj_add_state(ui_UpdateQuoteBtn, LV_STATE_DISABLED);
+    }
+    if (ui_SpeakQuoteBtn) {
+        lv_obj_add_state(ui_SpeakQuoteBtn, LV_STATE_DISABLED);
+    }
+    ESP_LOGI(TAG, "Quote buttons locked");
+}
+
+void unlock_quote_buttons(void) {
+    if (ui_UpdateQuoteBtn) {
+        lv_obj_clear_state(ui_UpdateQuoteBtn, LV_STATE_DISABLED);
+        lv_obj_add_flag(ui_UpdateQuoteBtn, LV_OBJ_FLAG_CLICKABLE);
+    }
+    if (ui_SpeakQuoteBtn) {
+        lv_obj_clear_state(ui_SpeakQuoteBtn, LV_STATE_DISABLED);
+        lv_obj_add_flag(ui_SpeakQuoteBtn, LV_OBJ_FLAG_CLICKABLE);
+    }
+    ESP_LOGI(TAG, "Quote buttons unlocked");
+}
+
+void ui_event_UpdateQuoteBtn(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    
+    if(event_code == LV_EVENT_CLICKED) {
+        ESP_LOGI(TAG, "Update Quote button pressed");
+        speaking_time_date = false;
+        speaking_weather = false;
+        speaking_quote = true;
+        lock_quote_buttons();
+        update_quote_status("Fetching quote...", false);
+        
+        for (int i = 0; i < 3; i++) {
+            lv_task_handler();
+            vTaskDelay(50 / portTICK_PERIOD_MS);
+        }
+        
+        request_quote_update();
+        
+        ESP_LOGI(TAG, "Quote update requested");
+    }
+}
+
+void ui_event_SpeakQuoteBtn(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    
+    if(event_code == LV_EVENT_CLICKED) {
+        ESP_LOGI(TAG, "Speak Quote button pressed");
+        speaking_time_date = false;
+        speaking_weather = false;
+        speaking_quote = true;
+        lock_quote_buttons();
+        speak_current_quote();
+        
+        ESP_LOGI(TAG, "Speaking current quote");
+    }
+}
 
 void update_weather_status(const char* status, bool is_error) {
     if (ui_WeatherStatusLabel && status) {
@@ -134,6 +221,7 @@ void ui_event_SpeakButton(lv_event_t * e)
         ESP_LOGI(TAG, "Speak Time button pressed - making date button non-clickable");
         speaking_time_date = true;
         speaking_weather = false;
+        speaking_quote = false;
         lv_async_call(disable_other_button_async, ui_SpeakButton);
         speak_current_time();
     }
@@ -152,6 +240,7 @@ void ui_event_SpeakDateButton(lv_event_t * e)
         ESP_LOGI(TAG, "Speak Date button pressed - making time button non-clickable");
         speaking_time_date = true;
         speaking_weather = false;
+        speaking_quote = false;
         lv_async_call(disable_other_button_async, ui_SpeakDateButton);
         speak_current_date();
     }
@@ -407,6 +496,7 @@ void ui_event_SpeakWeatherBtn(lv_event_t * e)
         ESP_LOGI(TAG, "Speak Current Weather button pressed");
         speaking_time_date = false;
         speaking_weather = true;
+        speaking_quote = false;
         lv_async_call(disable_other_weather_buttons_async, ui_SpeakWeatherBtn);
         speak_current_weather();
     }
@@ -420,6 +510,7 @@ void ui_event_SpeakTodayBtn(lv_event_t * e)
         ESP_LOGI(TAG, "Speak Today Forecast button pressed");
         speaking_time_date = false;
         speaking_weather = true;
+        speaking_quote = false;
         lv_async_call(disable_other_weather_buttons_async, ui_SpeakTodayBtn);
         speak_today_forecast();
     }
@@ -433,6 +524,7 @@ void ui_event_SpeakForecastBtn(lv_event_t * e)
         ESP_LOGI(TAG, "Speak 3-Day Forecast button pressed");
         speaking_time_date = false;
         speaking_weather = true;
+        speaking_quote = false;
         lv_async_call(disable_other_weather_buttons_async, ui_SpeakForecastBtn);
         speak_days_forecast(3);
     }
@@ -649,7 +741,11 @@ void ui_notify_tts_finished(void)
     if (speaking_weather) {
         unlock_weather_speak_buttons();
     }
+    if (speaking_quote) {
+        unlock_quote_buttons();
+    }
     
     speaking_time_date = false;
     speaking_weather = false;
+    speaking_quote = false;
 }

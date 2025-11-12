@@ -1,5 +1,5 @@
-#ifndef _CLOCK5_1_UI_H
-#define _CLOCK5_1_UI_H
+#ifndef _CLOCK_UI_H
+#define _CLOCK_UI_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -24,6 +24,7 @@ extern "C" {
 #include "ui_Screen1.h"
 #include "ui_Screen2.h"
 #include "ui_Screen3.h"
+#include "ui_Screen4.h"
 
 extern lv_obj_t * ui____initial_actions0;
 

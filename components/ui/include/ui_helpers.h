@@ -1,5 +1,5 @@
-#ifndef _CLOCK5_1_UI_HELPERS_H
-#define _CLOCK5_1_UI_HELPERS_H
+#ifndef _CLOCK_UI_HELPERS_H
+#define _CLOCK_UI_HELPERS_H
 
 #ifdef __cplusplus
 extern "C" {
