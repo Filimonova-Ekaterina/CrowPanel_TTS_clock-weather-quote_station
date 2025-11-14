@@ -31,7 +31,7 @@
 using namespace esp_panel::drivers;
 using namespace esp_panel::board;
 
-static const char* TAG = "clock_tts";
+static const char* TAG = "weather_tts";
 
 HxTTS *g_hx_tts = nullptr;
 TimezoneService tz_service;
@@ -87,7 +87,6 @@ static bool quote_update_requested = false;
 static bool initial_quote_loaded = false;
 
 static void set_status(const char* status);
-static void reconnect_wifi_delayed(void *arg);
 static void switch_to_main_screen_delayed(void *arg);
 static void switch_to_wifi_setup_screen_delayed(void *arg);
 static void cleanup_wifi_connection(void);
@@ -770,8 +769,7 @@ static void wifi_event_handler(void* arg, esp_event_base_t base, int32_t id, voi
                 
             case WIFI_EVENT_STA_DISCONNECTED: {
                 wifi_event_sta_disconnected_t* event = (wifi_event_sta_disconnected_t*) data;
-                if (!wifi_connection_in_progress) {
-                    wifi_connection_active = false;}
+                wifi_connection_active = false;
                 wifi_connected = false;
                 time_synced = false;
                 set_wifi_state(WIFI_STATE_DISCONNECTED);
@@ -798,10 +796,11 @@ static void wifi_event_handler(void* arg, esp_event_base_t base, int32_t id, voi
                     ESP_LOGW(TAG, "WiFi disconnected (%s), retrying %d/%d", 
                             reason, retry_num, MAX_RETRY);
                     
-                    safe_async_call(reconnect_wifi_delayed, NULL);
+                    vTaskDelay(pdMS_TO_TICKS(2000));
+                    esp_wifi_connect();
                 } else {
                     wifi_connection_in_progress = false;
-                    
+                    retry_num = 0;
                     const char* final_reason = "Connection failed";
                     if (event->reason == WIFI_REASON_AUTH_FAIL) {
                         final_reason = "Wrong password";
@@ -819,7 +818,6 @@ static void wifi_event_handler(void* arg, esp_event_base_t base, int32_t id, voi
                     }
                     
                     if (get_wifi_state() == WIFI_STATE_CONNECTING) {
-                        ESP_LOGI(TAG, "Auto-connect failed, switching to WiFi setup screen");
                         safe_async_call(switch_to_wifi_setup_screen_delayed, NULL);
                     }
                     
@@ -886,26 +884,6 @@ extern "C" void connect_to_wifi_manual(const char* ssid, const char* password) {
     }
 }
 
-static void reconnect_wifi_delayed(void *arg) {
-    vTaskDelay(WIFI_RETRY_DELAY_MS / portTICK_PERIOD_MS);
-       
-    if (!wifi_initialized || !wifi_event_group) {
-        return;
-    }
-    if (get_wifi_state() == WIFI_STATE_DISCONNECTED && 
-        wifi_connection_in_progress && 
-        retry_num <= MAX_RETRY) {
-        
-        ESP_LOGI(TAG, "Attempting WiFi reconnection %d/%d", retry_num, MAX_RETRY);
-        vTaskDelay(500 / portTICK_PERIOD_MS);        
-        char retry_msg[64];
-        snprintf(retry_msg, sizeof(retry_msg), "Retrying %d/%d...", retry_num, MAX_RETRY);
-        update_wifi_connection_status(retry_msg, retry_num, MAX_RETRY);
-        
-        esp_wifi_connect();
-    }
-}
-
 static void switch_to_wifi_setup_screen_delayed(void *arg) {
     for (int i = 0; i < 5; i++) {
         lv_task_handler();
@@ -923,7 +901,7 @@ static void switch_to_main_screen_delayed(void *arg) {
         vTaskDelay(200 / portTICK_PERIOD_MS);
     }
     
-    _ui_screen_change(&ui_Screen1, LV_SCR_LOAD_ANIM_FADE_ON, 50, 0, &ui_Screen1_screen_init);
+    _ui_screen_change(&ui_Screen3, LV_SCR_LOAD_ANIM_FADE_ON, 50, 0, &ui_Screen3_screen_init);
 }
 
 extern "C" void update_time(void) {

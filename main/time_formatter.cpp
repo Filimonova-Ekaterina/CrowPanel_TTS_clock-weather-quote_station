@@ -1,4 +1,5 @@
 #include "time_formatter.h"
+#include <cstring>
 
 void TimeFormatter::set_12h_format(bool enabled) { 
     use_12h_format = enabled; 

@@ -4,7 +4,7 @@
 #include <stdbool.h>
 
 #ifndef OPENWEATHER_API_KEY
-#define OPENWEATHER_API_KEY "4912a2a9e8c4c1b674f7baad849b5e2a"
+#define OPENWEATHER_API_KEY "4912a2a9e8c4c1b674f7baad849b5e2a" //install your key
 #endif
 
 typedef struct {

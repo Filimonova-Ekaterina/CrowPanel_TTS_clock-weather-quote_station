@@ -19,21 +19,20 @@ extern "C" {
     void update_quote_text(const char* quote_text);
 }
 
-// Фолбэк цитаты
 static bool get_fallback_quote_simple(char* quote_buffer, size_t buffer_size) {
     ESP_LOGI(TAG, "get_fallback_quote_simple called");
     
     const char* fallback_quotes[] = {
-        "The only way to do great work is to love what you do. By Steve Jobs",
-        "Innovation distinguishes between a leader and a follower. By Steve Jobs", 
-        "Your time is limited, so don't waste it living someone else's life. By Steve Jobs",
-        "Stay hungry, stay foolish. By Steve Jobs",
-        "The future belongs to those who believe in the beauty of their dreams. By Eleanor Roosevelt",
-        "Life is what happens to you while you're busy making other plans. By John Lennon",
-        "The only impossible journey is the one you never begin. By Tony Robbins",
-        "It does not matter how slowly you go as long as you do not stop. By Confucius",
-        "Everything you've ever wanted is on the other side of fear. By George Addair",
-        "The way to get started is to quit talking and begin doing. By Walt Disney"
+        "The only way to do great work is to love what you do. - Steve Jobs",
+        "Innovation distinguishes between a leader and a follower. - Steve Jobs", 
+        "Your time is limited, so don't waste it living someone else's life. - Steve Jobs",
+        "Stay hungry, stay foolish. - Steve Jobs",
+        "The future belongs to those who believe in the beauty of their dreams. - Eleanor Roosevelt",
+        "Life is what happens to you while you're busy making other plans. - John Lennon",
+        "The only impossible journey is the one you never begin. - Tony Robbins",
+        "It does not matter how slowly you go as long as you do not stop. - Confucius",
+        "Everything you've ever wanted is on the other side of fear. - George Addair",
+        "The way to get started is to quit talking and begin doing. - Walt Disney"
     };
     
     int quote_count = sizeof(fallback_quotes) / sizeof(fallback_quotes[0]);
@@ -45,7 +44,6 @@ static bool get_fallback_quote_simple(char* quote_buffer, size_t buffer_size) {
     return true;
 }
 
-// HTTP функция для получения цитат
 bool http_get_json_quote(const char* url, char* buffer, size_t buffer_size) {
     if (!wifi_connected) {
         update_quote_status("No WiFi connection", true);
@@ -55,7 +53,6 @@ bool http_get_json_quote(const char* url, char* buffer, size_t buffer_size) {
     char host[64] = {0};
     char path[256] = {0};
 
-    // Парсим URL
     if (sscanf(url, "http://%63[^/]/%255[^\n]", host, path) < 1) {
         ESP_LOGE(TAG, "URL parse failed: %s", url);
         update_quote_status("URL parse error", true);
@@ -129,7 +126,6 @@ bool http_get_json_quote(const char* url, char* buffer, size_t buffer_size) {
         total_read += bytes_read;
         if (total_read >= buffer_size - 1) break;
         
-        // Проверяем HTTP статус
         if (http_status == 0 && total_read > 12) {
             if (sscanf(buffer, "HTTP/1.1 %d", &http_status) == 1) {
                 ESP_LOGI(TAG, "HTTP Status: %d", http_status);
@@ -139,7 +135,6 @@ bool http_get_json_quote(const char* url, char* buffer, size_t buffer_size) {
             }
         }
 
-        // Ищем JSON
         if (!found_json) {
             char *json_start = strstr(buffer, "\r\n\r\n");
             if (json_start) {
@@ -186,7 +181,6 @@ bool http_get_json_quote(const char* url, char* buffer, size_t buffer_size) {
     return true;
 }
 
-// Парсер для API цитат
 static bool parse_quote_response(const char* json_str, quote_data_t* quote) {
     if (!json_str || strlen(json_str) == 0 || !quote) {
         ESP_LOGE(TAG, "Invalid parse parameters");
@@ -204,7 +198,6 @@ static bool parse_quote_response(const char* json_str, quote_data_t* quote) {
 
     bool success = false;
     
-    // Извлекаем поля
     cJSON* content = cJSON_GetObjectItem(root, "content");
     cJSON* author = cJSON_GetObjectItem(root, "author");
     cJSON* tags = cJSON_GetObjectItem(root, "tags");
@@ -215,11 +208,9 @@ static bool parse_quote_response(const char* json_str, quote_data_t* quote) {
         const char* quote_author = author->valuestring;
         
         if (strlen(quote_content) > 0 && strlen(quote_author) > 0) {
-            // Очищаем и копируем текст цитаты
             clean_quote_text(quote_content, quote->content, sizeof(quote->content));
             strlcpy(quote->author, quote_author, sizeof(quote->author));
             
-            // Обрабатываем теги
             if (tags && cJSON_IsArray(tags)) {
                 char tags_str[128] = "";
                 cJSON* tag = NULL;
@@ -256,7 +247,6 @@ static bool parse_quote_response(const char* json_str, quote_data_t* quote) {
     return success;
 }
 
-// Очистка текста цитаты
 void clean_quote_text(const char* input, char* output, size_t output_size) {
     if (!input || !output || output_size == 0) {
         if (output && output_size > 0) output[0] = '\0';
@@ -284,7 +274,6 @@ void clean_quote_text(const char* input, char* output, size_t output_size) {
         src++;
     }
     
-    // Убираем пробел в конце
     if (dest > output && *(dest-1) == ' ') {
         dest--;
     }
@@ -350,10 +339,6 @@ bool get_random_quote_simple(char* quote_buffer, size_t buffer_size) {
     return get_fallback_quote_simple(quote_buffer, buffer_size);
 }
 
-bool get_fallback_quote(char* quote_buffer, size_t buffer_size) {
-    return get_fallback_quote_simple(quote_buffer, buffer_size);
-}
-
 bool is_quote_api_configured(void) {
     return (strlen(QUOTE_API_URL) > 0);
 }
@@ -365,8 +350,4 @@ void quote_service_init(void) {
     if (!is_quote_api_configured()) {
         ESP_LOGW(TAG, "Quote API URL not configured correctly");
     }
-}
-
-void quote_service_cleanup(void) {
-    ESP_LOGI(TAG, "Quote service cleaned up");
 }

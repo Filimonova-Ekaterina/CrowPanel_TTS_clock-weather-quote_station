@@ -6,6 +6,7 @@
 
 # Repository Structure
 
+- `firmware/` — flashing utility and prebuilt binaries.
 - `main/` — firmware source code (ESP-IDF): LVGL UI, UART manager, weather services, time management, quote services, HxTTS integration, etc.  
 - `python/app/` — desktop GUI application for WiFi configuration and device setup.  
 - `components/ui/` — custom LVGL interface implementation (4-screen design)  
@@ -41,7 +42,7 @@
  
    ### Building from Source
 
-   1. Install ESP-IDF framework v5.4.  
+   1. Install ESP-IDF framework v5.5.  
    2. Clone the repository.  
    3. Dependencies are managed via the ESP-IDF component manager (`idf_component.yml`).  
    4. Build and flash with:  
@@ -49,6 +50,10 @@
       idf.py build
       idf.py -p PORT flash
       ```
+
+   ### Flashing Prebuilt Images
+
+   - Use `firmware/FlashTool_s3.exe` to flash the prebuilt images.
   
 3. **Hardware setup (post-flash)**  
    - After flashing completes and the device has rebooted, connect the GRC HxTTS module (UART0) and CrowPanel (UART1-OUT) using a 4-pin adapter.  
@@ -61,10 +66,18 @@
 
 5. **Verification**  
    - If the data transfer is successful and you press the "connect" button, the panel will attempt to connect to WiFi and display status messages.
-   - Upon successful WiFi connection, the device will automatically switch to the main clock screen.
+   - Upon successful WiFi connection, the device will automatically switch to the main weather screen.
    - Time synchronization and weather data collection will begin automatically.
    - Voice functionality becomes available for time, date, weather announcements and quote reading.
    - Navigate between screens using swipe gestures or navigation buttons to access all features.
+   - If the connection attempt is unsuccessful, enter the correct Wi-Fi credentials and resubmit.
+
+6. **Configuration (Optional)**
+   OpenWeatherMap API Key: The application includes a default API key for testing. For production use or to avoid rate limiting, you can use your own key:
+   1. Obtain an API key from OpenWeatherMap.
+   2. Locate the OPENWEATHER_API_KEY constant in main/weather_service.h line 7.
+   3. Replace the existing key with your own.
+   4. Rebuild and reflash the device again.
 
 ---
 
@@ -78,7 +91,9 @@
    - **Success**: "WiFi settings sent to device" - credentials are delivered to the panel
    - **Error**: Specific failure reason (COM port access denied, device not responding, etc.)
 6. The device's display will show the received WiFi credentials on the WiFi setup screen, and a connection attempt will begin when you press the "connect" button.
+7. Before updating firmware, close the app to release the COM port. 
 > **Note:** During the initial Wi-Fi setup, the device may reboot to initialize the network interfaces via a COM port connection. In this case, simply re-send the Wi-Fi credentials.
+>If Wi-Fi fails to connect, enter the correct credentials and resend them to unlock the connection button on the panel.
 
 ### Example usage
 
@@ -117,6 +132,7 @@ Below is an example screenshot showing the application with filled fields, COM p
 - Automatically transition to main screen on successful connection.
 - Begin time synchronization and weather data collection.
 - Update connection status display in real-time.
+- Option to send new data if the connection fails.
 
 ---
 

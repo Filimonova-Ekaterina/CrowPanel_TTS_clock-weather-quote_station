@@ -2,6 +2,7 @@
 #include "location_service.h"
 #include "esp_log.h"
 #include <string>
+#include <cstring>
 
 static const char *TAG = "Timezone";
 
