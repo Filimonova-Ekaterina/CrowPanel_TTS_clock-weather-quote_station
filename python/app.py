@@ -39,8 +39,8 @@ last_rx_time = None
 BG = "#646464"
 DEFAULT_FONT = ("Arial", 13)
 COMBO_BG = "#C0C0C0"
-PROBE_MAX_MS = 200    
-PROBE_POLL_MS = 20   
+PROBE_MAX_MS = 300
+PROBE_POLL_MS = 30   
 
 def safe_close_serial():
     global ser, stop_reader

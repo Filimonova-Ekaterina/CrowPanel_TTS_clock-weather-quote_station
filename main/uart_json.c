@@ -145,7 +145,7 @@ static void uart_json_task(void *arg) {
     size_t buffered = 0;
 
     ESP_LOGI(TAG, "UART JSON task started (UART %d, baud %d)", UART_JSON_NUM, UART_JSON_BAUD);
-
+    vTaskDelay(5000 / portTICK_PERIOD_MS);
     while (1) {
         uart_event_t evt;
         if (xQueueReceive(uart_json_queue, &evt, portMAX_DELAY) != pdTRUE) continue;
@@ -193,7 +193,6 @@ static void uart_json_task(void *arg) {
 
 int uart_json_init(uart_json_on_wifi_cb_t on_wifi) {
     ESP_LOGI(TAG, "Init UART JSON for WiFi config (UART %d, baud %d)", UART_JSON_NUM, UART_JSON_BAUD);
-
     if (uart_is_driver_installed(UART_JSON_NUM)) {
         ESP_LOGW(TAG, "UART driver already installed, reinstalling...");
         uart_driver_delete(UART_JSON_NUM);

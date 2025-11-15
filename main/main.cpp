@@ -1247,7 +1247,7 @@ static void sequential_tasks(void* arg) {
 
 extern "C" void app_main() {
     ESP_LOGI(TAG, "=== Starting Advanced Clock TTS ===");
-
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
         nvs_flash_erase();
@@ -1286,7 +1286,7 @@ extern "C" void app_main() {
     g_hx_tts = new HxTTS(HxTTS::BusType::UART);
     if (g_hx_tts) ESP_LOGI(TAG, "TTS initialized");
     else ESP_LOGE(TAG, "Failed to init TTS");
-
+    vTaskDelay(500 / portTICK_PERIOD_MS);
     uart_json_init(ui_set_wifi_credentials);
     xTaskCreate(sequential_tasks, "sequential_tasks", 16384, NULL, 3, NULL);
 
