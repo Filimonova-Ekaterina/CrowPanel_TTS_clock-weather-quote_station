@@ -50,10 +50,12 @@
       idf.py build
       idf.py -p PORT flash
       ```
+   5. Reboot the device by re-powering it.
 
    ### Flashing Prebuilt Images
 
    - Use `firmware/FlashTool_s3.exe` to flash the prebuilt images.
+   - Reboot the device by re-powering it.
   
 3. **Hardware setup (post-flash)**  
    - After flashing completes and the device has rebooted, connect the GRC HxTTS module (UART0) and CrowPanel (UART1-OUT) using a 4-pin adapter.  
